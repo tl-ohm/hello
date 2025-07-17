@@ -5,9 +5,9 @@ import random
 
 app = Flask(__name__)
 
-MONGO_URI = os.getenv('MONGO_URI')
+MONGO_URI = os.getenv('mongodb+srv://ToughLuck1:nigger@bitnsfw.ytfzx.mongodb.net/?retryWrites=true&w=majority&appName=BitNSFW')
 client = MongoClient(MONGO_URI)
-db = client['l7_api']
+db = client['db']
 
 keys_collection = db['keys']
 bots_collection = db['bots']
