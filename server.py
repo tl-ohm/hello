@@ -21,6 +21,16 @@ def send_command_to_bot(bot, key, target, seconds):
         }}
     )
 
+@app.route('/bot-complete/<bot_id>')
+def bot_complete(bot_id):
+    bot = bots_collection.find_one({"id": bot_id})
+    if bot and bot['which_key_is_using']:
+        keys_collection.update_one(
+            {"key": bot['which_key_is_using']}, 
+            {"$inc": {"concurrents": -1}}
+        )
+    return jsonify({"status": "updated"})
+
 @app.route('/send-l7-dw9q0j_api/<key>/<target>/<int:seconds>')
 def api_request(key, target, seconds):
     user = keys_collection.find_one({'key': key})
